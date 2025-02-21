@@ -1,0 +1,16 @@
+# Ignore environment variables
+.env
+.env.local
+.env.development
+.env.production
+
+# Ignore dependencies
+node_modules/
+npm-debug.log
+yarn-error.log
+pnpm-debug.log
+
+# Ignore build files
+dist/
+out/
+.vite/
