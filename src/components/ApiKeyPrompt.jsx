@@ -8,9 +8,29 @@ function ApiKeyPrompt() {
   const [isModalVisible, setIsModalVisible] = useState(true);
   const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {};
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setError("");
+    window.location.reload();
 
-  const handleKeyPress = (e) => {};
+    try {
+      // Store API key in localStorage
+      localStorage.setItem("gemini_api_key", apiKey);
+      setIsModalVisible(false);
+      navigate("/chat");
+    } catch (err) {
+      setError("Failed to save API key. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter" && apiKey.trim()) {
+      handleSubmit(e);
+  }
+};
 
   return (
     <>

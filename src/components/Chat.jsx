@@ -8,6 +8,8 @@ import {
   where,
   serverTimestamp,
   getDocs,
+  runTransaction,
+  doc
 } from "firebase/firestore";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { db, auth } from "../config/firebase";
@@ -22,32 +24,131 @@ function Chat() {
   const [isLoading, setIsLoading] = useState(false);
   const [indexReady, setIndexReady] = useState(false);
   const [user] = useAuthState(auth);
+  console.log('message',messages)
+  console.log('newmessage',newMessage)
+  console.log('isloading',isLoading)
+  console.log('indexready',indexReady)
+  console.log('user',user)
+   useEffect(() => {
+    if (!user || !user.uid) return;
 
-  useEffect(() => {
-    `Hello there! I'm here to help you with your programming questions. Feel free to ask me anything related to programming, and I'll do my best to assist you.
+    let isMounted = true;
 
-Here are some examples of questions you can ask:
+    const initializeChat = async () => {
+      try {
+        const messagesRef = collection(db, "messages");
 
-- How to write a loop in Python
-- What is the difference between a list and a tuple in Python
-- How to use regular expressions in JavaScript
+        await runTransaction(db, async (transaction) => {
+          const userMessagesQuery = query(
+            messagesRef,
+            where("userId", "==", user.uid),
+            where("isWelcomeMessage", "==", true)
+          );
+          const existingWelcomeSnapshot = await getDocs(userMessagesQuery);
 
-I can also help you with more specific questions, such as:
+          if (existingWelcomeSnapshot.empty) {
+            const newMessageRef = doc(db, "messages", `${user.uid}-welcome`);
 
-- How to solve the FizzBuzz problem in Java
-- How to implement a binary search tree in C++
-- How to use a neural network to classify images in Python
+            console.log("Creating welcome message for user:", user.uid);
+            transaction.set(newMessageRef, {
+              text: `Hello there! I'm here to help you with your programming questions. Feel free to ask me anything related to programming, and I'll do my best to assist you.`,
+              timestamp: serverTimestamp(),
+              role: "ai",
+              userId: user.uid,
+              isWelcomeMessage: true,
+            });
+          } else {
+            console.log("Welcome message already exists, skipping creation.");
+          }
+        });
+      } catch (error) {
+        console.error("Error initializing chat:", error);
+      }
+    };
 
-I'm particularly good at:
-- Explaining complex programming concepts
-- Debugging code issues
-- Providing code examples with explanations
-- Suggesting best practices and design patterns
+    if (isMounted) {
+      initializeChat();
+    }
 
-Just let me know what you're working on, and I'll do my best to help!`;
-  }, []);
+    const q = query(
+      collection(db, "messages"),
+      where("userId", "==", user.uid),
+      orderBy("timestamp", "asc")
+    );
 
-  const handleSubmit = async (e) => {};
+    const unsubscribe = onSnapshot(q, {
+      next: (snapshot) => {
+        const messageData = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setMessages(messageData);
+        setIndexReady(true);
+      },
+      error: (error) => {
+        console.error("Error fetching messages:", error);
+        setIndexReady(true);
+      },
+    });
+
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
+  }, [user?.uid])
+ 
+//handle submit----------------------------------------------------------------------------------------------------------------------
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!newMessage.trim() || isLoading) return;
+
+    setIsLoading(true);
+    try {
+      const userMessageDoc = await addDoc(collection(db, "messages"), { //saves the user's message in the "messages" collection in Firestore.
+        text: newMessage,//The user's message.
+        timestamp: serverTimestamp(),
+        role: "user",
+        userId: user.uid, //Identifies the user who sent the message.
+      });
+
+      const currentModel = initializeModel(); //Initialize AI Model
+      if (!currentModel) {
+        throw new Error("API key not found. Please set up your API key.");
+      }
+
+      const result = await currentModel.generateContent(
+        `You are a helpful programming assistant. Please provide well-formatted responses with code examples when appropriate. 
+         User question: ${newMessage}` //Sends the user's message to the AI.
+      );
+      const response = result.response.text(); //The AI generates a response based on the message.
+
+      await addDoc(collection(db, "messages"), {//Saves the AI's response to Firestore.
+        text: response,
+        timestamp: serverTimestamp(),
+        role: "ai",
+        userId: user.uid,
+        replyTo: userMessageDoc.id,//Links the AI response to the user's message.
+      });
+    } catch (error) {
+      console.error("Error:", error);
+      if (error.message.includes("API key expired") || error.message.includes("API_KEY_INVALID")) {
+        localStorage.removeItem("gemini_api_key"); // Remove expired API key
+        window.location.href = "/api-key"; // Redirect to API key setup page
+    }
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now(),
+          text: "Error: " + error.message,
+          role: "ai",
+          userId: user.uid,
+        },
+      ]);
+    } finally {
+      setNewMessage("");//Clears the message input field 
+      setIsLoading(false) //Sets isLoading to false so the user can send another message
+    }
+  };
 
   const MessageContent = ({ text }) => {
     return (

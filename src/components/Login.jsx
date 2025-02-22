@@ -3,6 +3,7 @@ import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import { FaGoogle } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import { loginUser, registerUser, signInWithGoogle } from "../utils/auth";
 
 const validationSchema = Yup.object({
   email: Yup.string().email("Invalid email address").required("Email is required"),
@@ -14,8 +15,58 @@ function Login() {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  const handleSubmit = async (values, { setSubmitting }) => {};
-  const handleGoogleSignIn = async () => {};
+  const handleSubmit = async (values, { setSubmitting }) => {
+    setError("");
+    try {
+      const { user, error: authError } = await (isRegistering
+        ? registerUser(values.email, values.password)
+        : loginUser(values.email, values.password));
+
+        if (authError) {
+          console.log("Auth Error:", authError); // Debugging
+    
+          if (authError?.message?.includes("auth/invalid-credential")) {
+            setError("Invalid email or password. Please try again.");
+          } else {
+            setError(authError?.message || "Something went wrong. Try again.");
+          }
+          return;
+        }
+
+      if (user) {
+        navigate("/chat");
+      }
+    } catch (err) {
+      console.log("Firebase Error:", err); // Debugging
+
+    const errorMessage = err?.message || "An unknown error occurred.";
+
+    if (errorMessage.includes("auth/invalid-credential")) {
+      setError("Invalid email or password. Please try again.");
+    } else if (errorMessage.includes("auth/user-not-found")) {
+      setError("No account found with this email.");
+    } else {
+      setError(errorMessage);
+    }
+    } finally {
+      setSubmitting(false);
+    }
+  };
+  const handleGoogleSignIn = async () => {
+    setError("");
+    try {
+      const { user, error: authError } = await signInWithGoogle();
+      if (authError) {
+        setError(authError);
+        return;
+      }
+      if (user) {
+        navigate("/chat");
+      }
+    } catch (err) {
+      setError(err.message);
+    }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center  bg-gray-100 p-6">

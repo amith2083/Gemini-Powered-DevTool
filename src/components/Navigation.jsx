@@ -5,10 +5,14 @@ import { logoutUser } from "../utils/auth";
 import { useState, useEffect, useRef } from "react";
 
 function Navigation() {
-  const [user] = [];
+  const [user] = useAuthState(auth)
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef(null);
+ 
 
+  
+
+ 
   const NavLink = ({ to, children }) => (
     <Link
       to={to}
@@ -55,7 +59,7 @@ function Navigation() {
             {user ? (
               <>
                 <NavLink to="/chat">Chat</NavLink>
-                <div className="relative" ref={menuRef}>
+                <div className="relative" ref={menuRef}  >
                   <button
                     onClick={() => setIsMenuOpen(!isMenuOpen)}
                     className="flex items-center space-x-2 ml-2 px-4 py-2 rounded-lg
@@ -69,6 +73,7 @@ function Navigation() {
                       }
                       alt="Profile"
                       className="w-6 h-6 rounded-full"
+                      
                     />
                     <span className="text-sm font-medium">{user.email}</span>
                     <svg
@@ -87,6 +92,7 @@ function Navigation() {
                       />
                     </svg>
                   </button>
+                  
 
                   {/* Dropdown Menu */}
                   {isMenuOpen && (
