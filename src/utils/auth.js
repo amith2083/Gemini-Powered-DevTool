@@ -40,6 +40,7 @@ export const registerUser = async (email, password) => {
 // Sign out user
 export const logoutUser = async () => {
   try {
+    localStorage.removeItem("gemini_api_key"); // Clear API key on logout
     await signOut(auth);
     return { error: null };
   } catch (error) {

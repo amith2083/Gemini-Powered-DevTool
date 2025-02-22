@@ -56,6 +56,7 @@ function Chat() {
               role: "ai",
               userId: user.uid,
               isWelcomeMessage: true,
+              // ttl: Timestamp.fromDate(new Date(Date.now() + 24 * 60 * 60 * 1000)), // 1 day TTL
             });
           } else {
             console.log("Welcome message already exists, skipping creation.");
@@ -109,6 +110,7 @@ function Chat() {
         timestamp: serverTimestamp(),
         role: "user",
         userId: user.uid, //Identifies the user who sent the message.
+        // ttl: Timestamp.fromDate(new Date(Date.now() + 24 * 60 * 60 * 1000)), // 1 day TTL
       });
 
       const currentModel = initializeModel(); //Initialize AI Model
