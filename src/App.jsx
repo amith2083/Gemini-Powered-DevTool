@@ -9,7 +9,7 @@ import { auth } from "./config/firebase";
 import Home from "./components/Home";
 import Chat from "./components/Chat";
 import Login from "./components/Login.jsx";
-import PrivateRoute from "./components/PrivateRoute";
+import PrivateRoute from "./components/PrivateRoute.jsx";
 import Navigation from "./components/Navigation";
 import "./utils/index.css";
 import ApiKeyPrompt from "./components/ApiKeyPrompt";

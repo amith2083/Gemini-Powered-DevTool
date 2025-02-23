@@ -76,7 +76,7 @@ function Landing() {
               <span className="inline-block animate-bounce">→</span>
             </button>
             <a
-              href="https://github.com"
+              href="https://github.com/amith2083"
               target="_blank"
               rel="noopener noreferrer"
               className="px-8 py-4 bg-gray-800/50 hover:bg-gray-800/70 backdrop-blur-lg

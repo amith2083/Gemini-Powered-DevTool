@@ -17,8 +17,10 @@ import { model, initializeModel } from "../config/gemini";
 import ReactMarkdown from "react-markdown";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
+import { useNavigate } from "react-router-dom";
 
 function Chat() {
+
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -29,6 +31,7 @@ function Chat() {
   console.log('isloading',isLoading)
   console.log('indexready',indexReady)
   console.log('user',user)
+ 
    useEffect(() => {
     if (!user || !user.uid) return;
 
